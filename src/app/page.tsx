@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Header } from '@/components/layout/Header';
 import { GradingForm } from '@/components/grading/GradingForm';
 import { GradingResult } from '@/components/grading/GradingResult';
@@ -26,20 +26,26 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const [isFinalizing, setIsFinalizing] = useState(false);
   const [aiGradingResult, setAiGradingResult] = useState<GradeStudentResponseOutput | null>(null);
+  const [currentYear, setCurrentYear] = useState<number | null>(null);
   const { toast } = useToast();
+
+  useEffect(() => {
+    setCurrentYear(new Date().getFullYear());
+  }, []);
+
 
   const handleFormSubmit = async (data: GradingFormValues) => {
     setIsLoading(true);
     setAiGradingResult(null); // Clear previous results
 
     try {
-      const questionDataUri = await fileToDataUrl(data.questionFile);
-      const studentResponseDataUri = await fileToDataUrl(data.studentResponseFile);
+      const questionFileContentDataUri = await fileToDataUrl(data.questionFile);
+      const studentResponseFileContentDataUri = await fileToDataUrl(data.studentResponseFile);
 
       const result = await handleGradeSubmission({
-        questionDataUri: questionDataUri,
+        questionFileContentDataUri,
+        studentResponseFileContentDataUri,
         rubric: data.rubric,
-        studentResponseDataUri: studentResponseDataUri,
       });
 
       setIsLoading(false);
@@ -113,7 +119,7 @@ export default function Home() {
         </div>
       </main>
       <footer className="text-center py-4 border-t border-border text-sm text-muted-foreground">
-        <p>&copy; {new Date().getFullYear()} GradeWise. AI-Powered Grading.</p>
+        {currentYear !== null ? <p>&copy; {currentYear} GradeWise. AI-Powered Grading.</p> : <p>Loading footer...</p>}
       </footer>
     </div>
   );

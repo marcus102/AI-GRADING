@@ -1,16 +1,15 @@
+
 import { z } from 'zod';
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ACCEPTED_FILE_TYPES_QUESTION = [
   "application/pdf",
-  "application/msword",
-  "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document" // .docx
 ];
 const ACCEPTED_FILE_TYPES_RESPONSE = [
   "application/pdf",
-  "application/msword",
-  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-  "text/plain"
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document", // .docx
+  "text/plain" // .txt
 ];
 
 export const gradingFormSchema = z.object({
@@ -19,15 +18,15 @@ export const gradingFormSchema = z.object({
     .refine((file) => file.size <= MAX_FILE_SIZE, `Max file size is 5MB.`)
     .refine(
       (file) => ACCEPTED_FILE_TYPES_QUESTION.includes(file.type),
-      ".pdf, .doc, .docx files are accepted for the question."
+      "Only .pdf and .docx files are accepted for the question."
     ),
-  rubric: z.string().min(20, { message: "Rubric must be at least 20 characters long." }),
+  rubric: z.string().min(20, { message: "Rubric must be at least 20 characters long." }).max(5000, {message: "Rubric must be at most 5000 characters long."}),
   studentResponseFile: z
     .instanceof(File, { message: "Student response file is required." })
     .refine((file) => file.size <= MAX_FILE_SIZE, `Max file size is 5MB.`)
     .refine(
       (file) => ACCEPTED_FILE_TYPES_RESPONSE.includes(file.type),
-      ".pdf, .doc, .docx, .txt files are accepted for the student response."
+      "Only .pdf, .docx, and .txt files are accepted for the student response."
     ),
 });
 

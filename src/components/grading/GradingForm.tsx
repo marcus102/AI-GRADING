@@ -26,7 +26,8 @@ export function GradingForm({ onSubmit, isLoading }: GradingFormProps) {
     resolver: zodResolver(gradingFormSchema),
     defaultValues: {
       rubric: '',
-      // File inputs don't have default values in the same way
+      questionFile: undefined,
+      studentResponseFile: undefined,
     },
   });
 
@@ -62,15 +63,16 @@ export function GradingForm({ onSubmit, isLoading }: GradingFormProps) {
               name="questionFile"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-lg">Question (PDF/Word)</FormLabel>
+                  <FormLabel className="text-lg">Question (PDF/DOCX)</FormLabel>
                   <FormControl>
                     <Input
                       type="file"
-                      accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                      accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
                       onChange={(e) => handleFileChange(e, field.onChange, setQuestionFileName)}
                       onBlur={field.onBlur}
                       name={field.name}
                       ref={field.ref}
+                      data-testid="question-file-input"
                     />
                   </FormControl>
                   {questionFileName && (
@@ -91,7 +93,7 @@ export function GradingForm({ onSubmit, isLoading }: GradingFormProps) {
                 <FormItem>
                   <FormLabel className="text-lg">Grading Rubric</FormLabel>
                   <FormControl>
-                    <Textarea placeholder="Describe the grading criteria and rubric" {...field} rows={5} />
+                    <Textarea placeholder="Describe the grading criteria and rubric (max 5000 characters)" {...field} rows={5} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -103,15 +105,16 @@ export function GradingForm({ onSubmit, isLoading }: GradingFormProps) {
               name="studentResponseFile"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-lg">Student's Response (PDF/Word/TXT)</FormLabel>
+                  <FormLabel className="text-lg">Student's Response (PDF/DOCX/TXT)</FormLabel>
                   <FormControl>
                      <Input
                       type="file"
-                      accept=".pdf,.doc,.docx,.txt,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain"
+                      accept=".pdf,.docx,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain"
                       onChange={(e) => handleFileChange(e, field.onChange, setResponseFileName)}
                       onBlur={field.onBlur}
                       name={field.name}
                       ref={field.ref}
+                      data-testid="student-response-file-input"
                     />
                   </FormControl>
                   {responseFileName && (
