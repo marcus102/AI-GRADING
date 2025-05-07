@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useForm } from 'react-hook-form';
@@ -8,8 +9,9 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { FileCheck, UploadCloud } from 'lucide-react';
+import { FileCheck, UploadCloud, Paperclip } from 'lucide-react';
 import { Spinner } from '@/components/ui/spinner';
+import { useState } from 'react';
 
 interface GradingFormProps {
   onSubmit: (data: GradingFormValues) => Promise<void>;
@@ -17,14 +19,31 @@ interface GradingFormProps {
 }
 
 export function GradingForm({ onSubmit, isLoading }: GradingFormProps) {
+  const [questionFileName, setQuestionFileName] = useState<string | null>(null);
+  const [responseFileName, setResponseFileName] = useState<string | null>(null);
+
   const form = useForm<GradingFormValues>({
     resolver: zodResolver(gradingFormSchema),
     defaultValues: {
-      question: '',
       rubric: '',
-      studentResponse: '',
+      // File inputs don't have default values in the same way
     },
   });
+
+  const handleFileChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    fieldChange: (file: File | null) => void,
+    setFileName: (name: string | null) => void
+  ) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      fieldChange(file);
+      setFileName(file.name);
+    } else {
+      fieldChange(null);
+      setFileName(null);
+    }
+  };
 
   return (
     <Card className="shadow-lg">
@@ -33,24 +52,38 @@ export function GradingForm({ onSubmit, isLoading }: GradingFormProps) {
           <UploadCloud className="mr-2 h-6 w-6 text-primary" />
           Submit for Grading
         </CardTitle>
-        <CardDescription>Enter the question, grading rubric, and the student's response.</CardDescription>
+        <CardDescription>Upload the question, grading rubric, and the student's response file.</CardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <FormField
               control={form.control}
-              name="question"
+              name="questionFile"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-lg">Question</FormLabel>
+                  <FormLabel className="text-lg">Question (PDF/Word)</FormLabel>
                   <FormControl>
-                    <Textarea placeholder="Enter the test question" {...field} rows={3} />
+                    <Input
+                      type="file"
+                      accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                      onChange={(e) => handleFileChange(e, field.onChange, setQuestionFileName)}
+                      onBlur={field.onBlur}
+                      name={field.name}
+                      ref={field.ref}
+                    />
                   </FormControl>
+                  {questionFileName && (
+                    <div className="mt-2 text-sm text-muted-foreground flex items-center">
+                      <Paperclip className="h-4 w-4 mr-2 shrink-0" />
+                      Selected: {questionFileName}
+                    </div>
+                  )}
                   <FormMessage />
                 </FormItem>
               )}
             />
+
             <FormField
               control={form.control}
               name="rubric"
@@ -64,19 +97,34 @@ export function GradingForm({ onSubmit, isLoading }: GradingFormProps) {
                 </FormItem>
               )}
             />
+
             <FormField
               control={form.control}
-              name="studentResponse"
+              name="studentResponseFile"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-lg">Student's Response</FormLabel>
+                  <FormLabel className="text-lg">Student's Response (PDF/Word/TXT)</FormLabel>
                   <FormControl>
-                    <Textarea placeholder="Enter the student's answer" {...field} rows={8} />
+                     <Input
+                      type="file"
+                      accept=".pdf,.doc,.docx,.txt,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain"
+                      onChange={(e) => handleFileChange(e, field.onChange, setResponseFileName)}
+                      onBlur={field.onBlur}
+                      name={field.name}
+                      ref={field.ref}
+                    />
                   </FormControl>
+                  {responseFileName && (
+                    <div className="mt-2 text-sm text-muted-foreground flex items-center">
+                      <Paperclip className="h-4 w-4 mr-2 shrink-0" />
+                      Selected: {responseFileName}
+                    </div>
+                  )}
                   <FormMessage />
                 </FormItem>
               )}
             />
+
             <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground" disabled={isLoading}>
               {isLoading ? (
                 <>

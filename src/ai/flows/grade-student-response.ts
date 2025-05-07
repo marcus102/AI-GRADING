@@ -1,3 +1,4 @@
+
 // use server'
 
 /**
@@ -14,9 +15,9 @@ import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
 const GradeStudentResponseInputSchema = z.object({
-  studentResponse: z.string().describe('The student response to be graded.'),
+  studentResponseDataUri: z.string().describe("The student's response, as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'."),
   rubric: z.string().describe('The grading rubric to be used for assessment.'),
-  question: z.string().describe('The question the student is answering'),
+  questionDataUri: z.string().describe("The test question, as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'."),
 });
 export type GradeStudentResponseInput = z.infer<typeof GradeStudentResponseInputSchema>;
 
@@ -35,8 +36,22 @@ const gradeStudentResponsePrompt = ai.definePrompt({
   name: 'gradeStudentResponsePrompt',
   input: {schema: GradeStudentResponseInputSchema},
   output: {schema: GradeStudentResponseOutputSchema},
-  prompt: `You are an AI grading assistant that assesses student responses based on a given rubric.\n\n  Question: {{{question}}}\n\n  Student Response: {{{studentResponse}}}\n\n  Rubric: {{{rubric}}}\n\n  Evaluate the student response based on the rubric and provide a score, detailed feedback, and a justification for the score. The score must be an integer.\n\n  Ensure that the feedback is constructive and helpful, guiding the student on how to improve their understanding and performance. The justification should clearly explain how the rubric was applied to arrive at the score.\n  Score is out of 10.
-\n  Format your response as a JSON object.
+  prompt: `You are an AI grading assistant that assesses student responses based on a given rubric.
+
+  Question:
+  {{media url=questionDataUri}}
+
+  Student Response:
+  {{media url=studentResponseDataUri}}
+
+  Rubric:
+  {{{rubric}}}
+
+  Evaluate the student response based on the rubric and provide a score, detailed feedback, and a justification for the score. The score must be an integer.
+  Ensure that the feedback is constructive and helpful, guiding the student on how to improve their understanding and performance. The justification should clearly explain how the rubric was applied to arrive at the score.
+  Score is out of 10.
+
+  Format your response as a JSON object.
   `,
 });
 

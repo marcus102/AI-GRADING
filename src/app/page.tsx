@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -12,6 +13,15 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Terminal } from 'lucide-react';
 import { Spinner } from '@/components/ui/spinner';
 
+const fileToDataUrl = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = (error) => reject(error);
+    reader.readAsDataURL(file);
+  });
+};
+
 export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const [isFinalizing, setIsFinalizing] = useState(false);
@@ -22,25 +32,38 @@ export default function Home() {
     setIsLoading(true);
     setAiGradingResult(null); // Clear previous results
 
-    const result = await handleGradeSubmission({
-      question: data.question,
-      rubric: data.rubric,
-      studentResponse: data.studentResponse,
-    });
+    try {
+      const questionDataUri = await fileToDataUrl(data.questionFile);
+      const studentResponseDataUri = await fileToDataUrl(data.studentResponseFile);
 
-    setIsLoading(false);
-
-    if (result.success && result.data) {
-      setAiGradingResult(result.data);
-      toast({
-        title: "Grading Successful",
-        description: "AI assessment has been completed.",
-        variant: "default",
+      const result = await handleGradeSubmission({
+        questionDataUri: questionDataUri,
+        rubric: data.rubric,
+        studentResponseDataUri: studentResponseDataUri,
       });
-    } else {
+
+      setIsLoading(false);
+
+      if (result.success && result.data) {
+        setAiGradingResult(result.data);
+        toast({
+          title: "Grading Successful",
+          description: "AI assessment has been completed.",
+          variant: "default",
+        });
+      } else {
+        toast({
+          title: "Grading Error",
+          description: result.error || "An unknown error occurred.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      setIsLoading(false);
+      console.error("Error processing files or grading:", error);
       toast({
-        title: "Grading Error",
-        description: result.error || "An unknown error occurred.",
+        title: "File Processing Error",
+        description: error instanceof Error ? error.message : "Could not process uploaded files.",
         variant: "destructive",
       });
     }
@@ -82,7 +105,7 @@ export default function Home() {
                  <Terminal className="h-5 w-5" />
                  <AlertTitle>Ready to Grade!</AlertTitle>
                  <AlertDescription>
-                   Fill out the form on the left to submit a student's response for AI-powered grading. Results will appear here.
+                   Upload the question file, rubric, and student's response file on the left for AI-powered grading. Results will appear here.
                  </AlertDescription>
                </Alert>
             )}
