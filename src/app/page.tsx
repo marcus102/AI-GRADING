@@ -14,6 +14,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Terminal, Info } from 'lucide-react';
 import { Spinner } from '@/components/ui/spinner';
 import type { StoredGradedTest } from '@/lib/types';
+import { RecentGradedTests } from '@/components/grading/RecentGradedTests';
 
 const fileToDataUrl = (file: File): Promise<string> => {
   return new Promise((resolve, reject) => {
@@ -30,22 +31,34 @@ export default function Home() {
   const [aiGradingResult, setAiGradingResult] = useState<GradeStudentResponseOutput | null>(null);
   const [currentFormValues, setCurrentFormValues] = useState<ValidatedGradingFormValues | null>(null);
   const [currentYear, setCurrentYear] = useState<number | null>(null);
+  const [gradedList, setGradedList] = useState<StoredGradedTest[]>([]);
   const { toast } = useToast();
 
   useEffect(() => {
     setCurrentYear(new Date().getFullYear());
-  }, []);
+    try {
+      const storedData = localStorage.getItem('gradedBrokerTests');
+      if (storedData) {
+        setGradedList(JSON.parse(storedData));
+      }
+    } catch (error) {
+      console.error("Failed to load graded tests from localStorage", error);
+      toast({
+        title: "Loading Error",
+        description: "Could not load initial graded tests from local storage.",
+        variant: "destructive",
+      });
+    }
+  }, [toast]);
 
 
   const handleFormSubmit = async (data: GradingFormValues) => {
     setIsLoading(true);
     setAiGradingResult(null); 
 
-    // Validate with Zod before processing, ensuring maxScore is a number
     const validationResult = gradingFormSchema.safeParse(data);
     if (!validationResult.success) {
       setIsLoading(false);
-      // Attempt to show specific Zod error, or a generic one
       const firstError = validationResult.error.errors[0];
       toast({
         title: "Invalid Input",
@@ -55,8 +68,8 @@ export default function Home() {
       return;
     }
     
-    const validatedData = validationResult.data as ValidatedGradingFormValues; // Now maxScore is guaranteed to be a number
-    setCurrentFormValues(validatedData); // Store validated form values
+    const validatedData = validationResult.data as ValidatedGradingFormValues; 
+    setCurrentFormValues(validatedData);
 
     try {
       const questionFileContentDataUri = await fileToDataUrl(validatedData.questionFile);
@@ -71,7 +84,7 @@ export default function Home() {
         questionFileContentDataUri,
         studentResponseFileContentDataUri,
         rubric: validatedData.rubric,
-        maxScore: validatedData.maxScore, // Use validated maxScore
+        maxScore: validatedData.maxScore,
         expectedAnswerFileContentDataUri,
       });
 
@@ -113,7 +126,7 @@ export default function Home() {
     }
 
     const newGradedTest: StoredGradedTest = {
-      id: new Date().toISOString() + Math.random().toString(36).substring(2, 15), // Simple unique ID
+      id: new Date().toISOString() + Math.random().toString(36).substring(2, 15),
       questionFileName: currentFormValues.questionFile.name,
       studentResponseFileName: currentFormValues.studentResponseFile.name,
       rubricSummary: currentFormValues.rubric.substring(0, 50) + (currentFormValues.rubric.length > 50 ? '...' : ''),
@@ -121,7 +134,7 @@ export default function Home() {
       aiFeedback: aiGradingResult.feedback,
       aiJustification: aiGradingResult.justification,
       finalScore: finalGrade.score,
-      maxScore: currentFormValues.maxScore, // Store maxScore
+      maxScore: currentFormValues.maxScore,
       instructorComments: finalGrade.instructorComments,
       gradingDate: new Date().toISOString(),
     };
@@ -129,10 +142,10 @@ export default function Home() {
     try {
       const existingTestsJSON = localStorage.getItem('gradedBrokerTests');
       const existingTests: StoredGradedTest[] = existingTestsJSON ? JSON.parse(existingTestsJSON) : [];
-      existingTests.push(newGradedTest);
-      localStorage.setItem('gradedBrokerTests', JSON.stringify(existingTests));
+      const updatedTests = [...existingTests, newGradedTest];
+      localStorage.setItem('gradedBrokerTests', JSON.stringify(updatedTests));
+      setGradedList(updatedTests); // Update state to re-render RecentGradedTests
       console.log("Final Grade Data Saved to localStorage:", newGradedTest);
-      // PDF export toast is handled within GradingResult
     } catch (e) {
       console.error("Failed to save to localStorage", e);
       toast({
@@ -147,8 +160,6 @@ export default function Home() {
     setAiGradingResult(null);
     setCurrentFormValues(null);
     setIsLoading(false); 
-    // Form fields in GradingForm will persist, user can change them or re-upload.
-    // This primarily clears the results display.
     toast({
       title: "Ready for New Submission",
       description: "The previous grading result has been cleared.",
@@ -205,8 +216,13 @@ export default function Home() {
             )}
           </div>
         </div>
+        
+        <div className="mt-12">
+          <RecentGradedTests tests={gradedList} />
+        </div>
+
       </main>
-      <footer className="text-center py-4 border-t border-border text-sm text-muted-foreground">
+      <footer className="text-center py-4 border-t border-border text-sm text-muted-foreground mt-12">
         {currentYear !== null ? <p>&copy; {currentYear} GradeWise. AI-Powered Grading.</p> : <p>Loading footer...</p>}
       </footer>
     </div>
