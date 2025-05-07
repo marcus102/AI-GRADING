@@ -99,7 +99,7 @@ export function GradedTestsList({ tests, onDeleteTest }: GradedTestsListProps) {
               </div>
               <div>
                 <h4 className="text-sm font-semibold text-muted-foreground">Final Score</h4>
-                <Badge variant="default" className="text-lg px-3 py-1 bg-primary text-primary-foreground">{test.finalScore} / 10</Badge>
+                <Badge variant="default" className="text-lg px-3 py-1 bg-primary text-primary-foreground">{test.finalScore} / {test.maxScore}</Badge>
               </div>
             </div>
 
@@ -110,7 +110,7 @@ export function GradedTestsList({ tests, onDeleteTest }: GradedTestsListProps) {
                   <div className="space-y-4">
                     <div>
                       <h4 className="font-semibold mb-1 flex items-center"><Star className="mr-2 h-4 w-4 text-accent" /> AI Score</h4>
-                      <Badge variant="secondary" className="text-md">{test.aiScore} / 10</Badge>
+                      <Badge variant="secondary" className="text-md">{test.aiScore} / {test.maxScore}</Badge>
                     </div>
                     <div>
                       <h4 className="font-semibold mb-1 flex items-center"><MessageSquare className="mr-2 h-4 w-4 text-primary" /> AI Feedback</h4>
@@ -136,3 +136,4 @@ export function GradedTestsList({ tests, onDeleteTest }: GradedTestsListProps) {
     </div>
   );
 }
+

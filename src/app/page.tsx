@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -53,6 +54,7 @@ export default function Home() {
         questionFileContentDataUri,
         studentResponseFileContentDataUri,
         rubric: data.rubric,
+        maxScore: data.maxScore,
         expectedAnswerFileContentDataUri,
       });
 
@@ -102,6 +104,7 @@ export default function Home() {
       aiFeedback: aiGradingResult.feedback,
       aiJustification: aiGradingResult.justification,
       finalScore: finalGrade.score,
+      maxScore: currentFormValues.maxScore, // Store maxScore
       instructorComments: finalGrade.instructorComments,
       gradingDate: new Date().toISOString(),
     };
@@ -151,9 +154,10 @@ export default function Home() {
                 <p className="mt-4 text-lg text-muted-foreground">AI is grading, please wait...</p>
               </div>
             )}
-            {!isLoading && aiGradingResult && (
+            {!isLoading && aiGradingResult && currentFormValues && (
               <GradingResult 
                 aiResult={aiGradingResult} 
+                maxScore={currentFormValues.maxScore}
                 onFinalize={handleFinalGradeData} 
                 isFinalizing={isFinalizing}
                 onStartOver={handleStartOver}
@@ -164,7 +168,7 @@ export default function Home() {
                  <Terminal className="h-5 w-5" />
                  <AlertTitle>Ready to Grade!</AlertTitle>
                  <AlertDescription>
-                   Upload the question file, rubric, and student's response file on the left for AI-powered grading. You can also optionally provide an expected answer file. Results will appear here.
+                   Upload the question file, rubric, student's response file, and set the maximum score on the left for AI-powered grading. You can also optionally provide an expected answer file. Results will appear here.
                  </AlertDescription>
                </Alert>
             )}

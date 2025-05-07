@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { FileCheck, UploadCloud, Paperclip, FileText } from 'lucide-react';
+import { FileCheck, UploadCloud, Paperclip, FileText, AlertCircle } from 'lucide-react';
 import { Spinner } from '@/components/ui/spinner';
 import { useState } from 'react';
 
@@ -30,6 +30,7 @@ export function GradingForm({ onSubmit, isLoading }: GradingFormProps) {
       questionFile: undefined,
       studentResponseFile: undefined,
       expectedAnswerFile: undefined,
+      maxScore: 10, // Default max score
     },
   });
 
@@ -55,7 +56,7 @@ export function GradingForm({ onSubmit, isLoading }: GradingFormProps) {
           <UploadCloud className="mr-2 h-6 w-6 text-primary" />
           Submit for Grading
         </CardTitle>
-        <CardDescription>Upload the question, grading rubric, student's response, and optionally, the expected answer.</CardDescription>
+        <CardDescription>Upload the question, grading rubric, student's response, and optionally, the expected answer. Set the maximum score.</CardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>
@@ -65,7 +66,7 @@ export function GradingForm({ onSubmit, isLoading }: GradingFormProps) {
               name="questionFile"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-lg">Question (PDF/DOCX)</FormLabel>
+                  <FormLabel className="text-lg">Question File (PDF/DOCX)</FormLabel>
                   <FormControl>
                     <Input
                       type="file"
@@ -101,13 +102,35 @@ export function GradingForm({ onSubmit, isLoading }: GradingFormProps) {
                 </FormItem>
               )}
             />
+            
+            <FormField
+              control={form.control}
+              name="maxScore"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-lg">Maximum Score</FormLabel>
+                  <FormControl>
+                    <Input 
+                      type="number" 
+                      placeholder="e.g., 10, 20, 100" 
+                      {...field} 
+                      onChange={e => field.onChange(parseInt(e.target.value, 10))}
+                      min="1"
+                      max="100"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
 
             <FormField
               control={form.control}
               name="studentResponseFile"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-lg">Student's Response (PDF/DOCX/TXT)</FormLabel>
+                  <FormLabel className="text-lg">Student's Response File (PDF/DOCX/TXT)</FormLabel>
                   <FormControl>
                      <Input
                       type="file"
@@ -137,7 +160,7 @@ export function GradingForm({ onSubmit, isLoading }: GradingFormProps) {
                 <FormItem>
                   <FormLabel className="text-lg flex items-center">
                     <FileText className="mr-2 h-5 w-5 text-muted-foreground" />
-                    Expected Answer (Optional - PDF/DOCX/TXT)
+                    Expected Answer File (Optional - PDF/DOCX/TXT)
                   </FormLabel>
                   <FormControl>
                      <Input
@@ -160,6 +183,14 @@ export function GradingForm({ onSubmit, isLoading }: GradingFormProps) {
                 </FormItem>
               )}
             />
+            
+            {form.formState.errors.root && (
+              <div className="flex items-center p-3 text-sm text-destructive bg-destructive/10 border border-destructive/30 rounded-md">
+                <AlertCircle className="h-5 w-5 mr-2" />
+                <p>{form.formState.errors.root.message}</p>
+              </div>
+            )}
+
 
             <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground" disabled={isLoading}>
               {isLoading ? (
@@ -178,3 +209,4 @@ export function GradingForm({ onSubmit, isLoading }: GradingFormProps) {
     </Card>
   );
 }
+

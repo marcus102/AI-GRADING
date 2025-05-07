@@ -18,12 +18,13 @@ import { Spinner } from '@/components/ui/spinner';
 
 interface GradingResultProps {
   aiResult: GradeStudentResponseOutput;
+  maxScore: number;
   onFinalize: (finalGrade: { score: number; feedback: string; justification: string; instructorComments?: string }) => void;
   isFinalizing: boolean; // Prop to indicate external finalization process
   onStartOver: () => void;
 }
 
-export function GradingResult({ aiResult, onFinalize, isFinalizing: isExternallyFinalizing, onStartOver }: GradingResultProps) {
+export function GradingResult({ aiResult, maxScore, onFinalize, isFinalizing: isExternallyFinalizing, onStartOver }: GradingResultProps) {
   const [overriddenScore, setOverriddenScore] = useState<number | string>(aiResult.score);
   const [instructorComments, setInstructorComments] = useState<string>('');
   const [isPdfExporting, setIsPdfExporting] = useState(false);
@@ -37,10 +38,10 @@ export function GradingResult({ aiResult, onFinalize, isFinalizing: isExternally
 
   const handleFinalizeAndExport = async () => {
     const finalScore = typeof overriddenScore === 'string' ? parseFloat(overriddenScore) : overriddenScore;
-    if (isNaN(finalScore) || finalScore < 0 || finalScore > 10) {
+    if (isNaN(finalScore) || finalScore < 0 || finalScore > maxScore) {
       toast({
         title: "Invalid Score",
-        description: "Please enter a valid score between 0 and 10.",
+        description: `Please enter a valid score between 0 and ${maxScore}.`,
         variant: "destructive",
       });
       return;
@@ -129,7 +130,7 @@ export function GradingResult({ aiResult, onFinalize, isFinalizing: isExternally
               <Star className="mr-2 h-5 w-5 text-accent" />
               AI Score
             </h3>
-            <Badge variant="default" className="text-2xl px-4 py-2 bg-accent text-accent-foreground">{aiResult.score} / 10</Badge>
+            <Badge variant="default" className="text-2xl px-4 py-2 bg-accent text-accent-foreground">{aiResult.score} / {maxScore}</Badge>
           </div>
 
           <div>
@@ -156,14 +157,14 @@ export function GradingResult({ aiResult, onFinalize, isFinalizing: isExternally
               Instructor Review &amp; Override
             </h3>
             <div className="space-y-2">
-              <Label htmlFor="overriddenScore" className="text-md">Override Score (0-10)</Label>
+              <Label htmlFor="overriddenScore" className="text-md">Override Score (0-{maxScore})</Label>
               <Input
                 id="overriddenScore"
                 type="number"
                 value={overriddenScore}
                 onChange={(e) => setOverriddenScore(e.target.value === '' ? '' : parseFloat(e.target.value))}
                 min="0"
-                max="10"
+                max={maxScore}
                 step="0.1" 
                 className="max-w-xs focus:ring-accent focus:border-accent"
                 disabled={isBusy}
@@ -208,3 +209,4 @@ export function GradingResult({ aiResult, onFinalize, isFinalizing: isExternally
     </Card>
   );
 }
+

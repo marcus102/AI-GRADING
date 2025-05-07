@@ -52,6 +52,7 @@ interface HandleGradeSubmissionActionInput {
   questionFileContentDataUri: string;
   studentResponseFileContentDataUri: string;
   rubric: string;
+  maxScore: number;
   expectedAnswerFileContentDataUri?: string;
 }
 
@@ -110,6 +111,7 @@ export async function handleGradeSubmission(input: HandleGradeSubmissionActionIn
       questionText,
       studentResponseText,
       rubric: input.rubric,
+      maxScore: input.maxScore,
       expectedAnswerText,
     };
 
@@ -120,3 +122,4 @@ export async function handleGradeSubmission(input: HandleGradeSubmissionActionIn
     return { success: false, error: error instanceof Error ? error.message : "An unknown error occurred during grading." };
   }
 }
+

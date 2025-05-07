@@ -36,6 +36,14 @@ export const gradingFormSchema = z.object({
       (file) => !file || ACCEPTED_FILE_TYPES_RESPONSE_OR_EXPECTED.includes(file.type),
       "Only .pdf, .docx, and .txt files are accepted for the expected answer."
     ),
+  maxScore: z
+    .number({
+      required_error: "Max score is required.",
+      invalid_type_error: "Max score must be a number.",
+    })
+    .min(1, { message: "Max score must be at least 1." })
+    .max(100, { message: "Max score can be at most 100." })
+    .default(10),
 });
 
 export type GradingFormValues = z.infer<typeof gradingFormSchema>;

@@ -17,11 +17,12 @@ const GradeStudentResponseInputSchema = z.object({
   rubric: z.string().describe('The grading rubric to be used for assessment.'),
   questionText: z.string().describe("The plain text content of the test question."),
   expectedAnswerText: z.string().optional().describe("The plain text content of the expected answer, if provided by the lecturer."),
+  maxScore: z.number().describe('The maximum possible score for this question, set by the instructor.'),
 });
 export type GradeStudentResponseInput = z.infer<typeof GradeStudentResponseInputSchema>;
 
 const GradeStudentResponseOutputSchema = z.object({
-  score: z.number().describe('The score assigned to the student response (out of 10).'),
+  score: z.number().describe('The score assigned to the student response (out of the specified maxScore).'),
   feedback: z.string().describe('Detailed feedback on the student response, highlighting strengths and areas for improvement.'),
   justification: z.string().describe('Explanation of how the score was derived based on the rubric.'),
 });
@@ -35,7 +36,7 @@ const gradeStudentResponsePrompt = ai.definePrompt({
   name: 'gradeStudentResponsePrompt',
   input: {schema: GradeStudentResponseInputSchema},
   output: {schema: GradeStudentResponseOutputSchema},
-  prompt: `You are an AI grading assistant that assesses student responses based on a given rubric.
+  prompt: `You are an AI grading assistant that assesses student responses based on a given rubric and a maximum possible score.
 
   Question:
   {{{questionText}}}
@@ -46,12 +47,15 @@ const gradeStudentResponsePrompt = ai.definePrompt({
   Rubric:
   {{{rubric}}}
 
+  Maximum Score for this question: {{{maxScore}}}
+
   {{#if expectedAnswerText}}
   Expected Answer (for reference, provided by the lecturer):
   {{{expectedAnswerText}}}
   {{/if}}
 
-  Evaluate the student response based on the rubric (and the expected answer if provided as reference) and provide a score (out of 10), detailed feedback, and a justification for the score. The score must be an integer or a float with one decimal place (e.g., 7, 8.5).
+  Evaluate the student response based on the rubric (and the expected answer if provided as reference) and provide a score (out of {{{maxScore}}}), detailed feedback, and a justification for the score.
+  The score must be an integer or a float with one decimal place, and it must not exceed {{{maxScore}}}.
   Ensure that the feedback is constructive and helpful, guiding the student on how to improve their understanding and performance. The justification should clearly explain how the rubric was applied to arrive at the score.
   
   Format your response as a JSON object.
@@ -73,6 +77,14 @@ const gradeStudentResponseFlow = ai.defineFlow(
     if (typeof output.score === 'string') {
       output.score = parseFloat(output.score);
     }
+    // Ensure score does not exceed maxScore
+    if (output.score > input.maxScore) {
+      output.score = input.maxScore;
+    }
+    if (output.score < 0) {
+        output.score = 0;
+    }
     return output;
   }
 );
+

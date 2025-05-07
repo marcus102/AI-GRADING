@@ -8,6 +8,8 @@ export interface StoredGradedTest {
   aiFeedback: string;
   aiJustification: string;
   finalScore: number;
+  maxScore: number; // Maximum possible score for this test
   instructorComments?: string;
   gradingDate: string; // ISO string format for date
 }
+
