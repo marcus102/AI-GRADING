@@ -12,6 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Terminal } from 'lucide-react';
 import { Spinner } from '@/components/ui/spinner';
+import type { StoredGradedTest } from '@/lib/types';
 
 const fileToDataUrl = (file: File): Promise<string> => {
   return new Promise((resolve, reject) => {
@@ -26,6 +27,7 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const [isFinalizing, setIsFinalizing] = useState(false); 
   const [aiGradingResult, setAiGradingResult] = useState<GradeStudentResponseOutput | null>(null);
+  const [currentFormValues, setCurrentFormValues] = useState<GradingFormValues | null>(null);
   const [currentYear, setCurrentYear] = useState<number | null>(null);
   const { toast } = useToast();
 
@@ -37,6 +39,7 @@ export default function Home() {
   const handleFormSubmit = async (data: GradingFormValues) => {
     setIsLoading(true);
     setAiGradingResult(null); 
+    setCurrentFormValues(data); // Store form values to use when saving
 
     try {
       const questionFileContentDataUri = await fileToDataUrl(data.questionFile);
@@ -82,12 +85,48 @@ export default function Home() {
   };
 
   const handleFinalGradeData = (finalGrade: { score: number; feedback: string; justification: string; instructorComments?: string }) => {
-    console.log("Final Grade Data (for logging/database):", finalGrade);
-    // PDF export toast is handled within GradingResult
+    if (!aiGradingResult || !currentFormValues) {
+      toast({
+        title: "Error Saving Grade",
+        description: "Could not save the grade. Missing AI result or form data.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const newGradedTest: StoredGradedTest = {
+      id: new Date().toISOString() + Math.random().toString(36).substring(2, 15), // Simple unique ID
+      questionFileName: currentFormValues.questionFile.name,
+      studentResponseFileName: currentFormValues.studentResponseFile.name,
+      rubricSummary: currentFormValues.rubric.substring(0, 50) + (currentFormValues.rubric.length > 50 ? '...' : ''),
+      aiScore: aiGradingResult.score,
+      aiFeedback: aiGradingResult.feedback,
+      aiJustification: aiGradingResult.justification,
+      finalScore: finalGrade.score,
+      instructorComments: finalGrade.instructorComments,
+      gradingDate: new Date().toISOString(),
+    };
+
+    try {
+      const existingTestsJSON = localStorage.getItem('gradedBrokerTests');
+      const existingTests: StoredGradedTest[] = existingTestsJSON ? JSON.parse(existingTestsJSON) : [];
+      existingTests.push(newGradedTest);
+      localStorage.setItem('gradedBrokerTests', JSON.stringify(existingTests));
+      console.log("Final Grade Data Saved to localStorage:", newGradedTest);
+      // PDF export toast is handled within GradingResult
+    } catch (e) {
+      console.error("Failed to save to localStorage", e);
+      toast({
+        title: "Storage Error",
+        description: "Could not save the graded test to local storage. It might be full or disabled.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleStartOver = () => {
     setAiGradingResult(null);
+    setCurrentFormValues(null);
     setIsLoading(false); 
     // Form fields in GradingForm will persist, user can change them or re-upload.
     // This primarily clears the results display.
