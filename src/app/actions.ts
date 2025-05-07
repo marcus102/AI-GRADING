@@ -1,3 +1,4 @@
+
 'use server';
 
 import path from 'node:path';
@@ -51,6 +52,7 @@ interface HandleGradeSubmissionActionInput {
   questionFileContentDataUri: string;
   studentResponseFileContentDataUri: string;
   rubric: string;
+  expectedAnswerFileContentDataUri?: string;
 }
 
 interface ActionResult {
@@ -98,11 +100,17 @@ export async function handleGradeSubmission(input: HandleGradeSubmissionActionIn
   try {
     const questionText = await extractTextFromDataUri(input.questionFileContentDataUri);
     const studentResponseText = await extractTextFromDataUri(input.studentResponseFileContentDataUri);
+    
+    let expectedAnswerText: string | undefined = undefined;
+    if (input.expectedAnswerFileContentDataUri) {
+      expectedAnswerText = await extractTextFromDataUri(input.expectedAnswerFileContentDataUri);
+    }
 
     const genkitInput: GradeStudentResponseInput = {
       questionText,
       studentResponseText,
       rubric: input.rubric,
+      expectedAnswerText,
     };
 
     const result = await gradeStudentResponse(genkitInput);

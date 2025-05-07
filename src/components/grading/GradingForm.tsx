@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { FileCheck, UploadCloud, Paperclip } from 'lucide-react';
+import { FileCheck, UploadCloud, Paperclip, FileText } from 'lucide-react';
 import { Spinner } from '@/components/ui/spinner';
 import { useState } from 'react';
 
@@ -21,6 +21,7 @@ interface GradingFormProps {
 export function GradingForm({ onSubmit, isLoading }: GradingFormProps) {
   const [questionFileName, setQuestionFileName] = useState<string | null>(null);
   const [responseFileName, setResponseFileName] = useState<string | null>(null);
+  const [expectedAnswerFileName, setExpectedAnswerFileName] = useState<string | null>(null);
 
   const form = useForm<GradingFormValues>({
     resolver: zodResolver(gradingFormSchema),
@@ -28,6 +29,7 @@ export function GradingForm({ onSubmit, isLoading }: GradingFormProps) {
       rubric: '',
       questionFile: undefined,
       studentResponseFile: undefined,
+      expectedAnswerFile: undefined,
     },
   });
 
@@ -53,7 +55,7 @@ export function GradingForm({ onSubmit, isLoading }: GradingFormProps) {
           <UploadCloud className="mr-2 h-6 w-6 text-primary" />
           Submit for Grading
         </CardTitle>
-        <CardDescription>Upload the question, grading rubric, and the student's response file.</CardDescription>
+        <CardDescription>Upload the question, grading rubric, student's response, and optionally, the expected answer.</CardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>
@@ -121,6 +123,37 @@ export function GradingForm({ onSubmit, isLoading }: GradingFormProps) {
                     <div className="mt-2 text-sm text-muted-foreground flex items-center">
                       <Paperclip className="h-4 w-4 mr-2 shrink-0" />
                       Selected: {responseFileName}
+                    </div>
+                  )}
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="expectedAnswerFile"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-lg flex items-center">
+                    <FileText className="mr-2 h-5 w-5 text-muted-foreground" />
+                    Expected Answer (Optional - PDF/DOCX/TXT)
+                  </FormLabel>
+                  <FormControl>
+                     <Input
+                      type="file"
+                      accept=".pdf,.docx,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain"
+                      onChange={(e) => handleFileChange(e, field.onChange, setExpectedAnswerFileName)}
+                      onBlur={field.onBlur}
+                      name={field.name}
+                      ref={field.ref}
+                      data-testid="expected-answer-file-input"
+                    />
+                  </FormControl>
+                  {expectedAnswerFileName && (
+                    <div className="mt-2 text-sm text-muted-foreground flex items-center">
+                      <Paperclip className="h-4 w-4 mr-2 shrink-0" />
+                      Selected: {expectedAnswerFileName}
                     </div>
                   )}
                   <FormMessage />

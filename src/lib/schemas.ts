@@ -6,7 +6,7 @@ const ACCEPTED_FILE_TYPES_QUESTION = [
   "application/pdf",
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document" // .docx
 ];
-const ACCEPTED_FILE_TYPES_RESPONSE = [
+const ACCEPTED_FILE_TYPES_RESPONSE_OR_EXPECTED = [
   "application/pdf",
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document", // .docx
   "text/plain" // .txt
@@ -25,9 +25,18 @@ export const gradingFormSchema = z.object({
     .instanceof(File, { message: "Student response file is required." })
     .refine((file) => file.size <= MAX_FILE_SIZE, `Max file size is 5MB.`)
     .refine(
-      (file) => ACCEPTED_FILE_TYPES_RESPONSE.includes(file.type),
+      (file) => ACCEPTED_FILE_TYPES_RESPONSE_OR_EXPECTED.includes(file.type),
       "Only .pdf, .docx, and .txt files are accepted for the student response."
+    ),
+  expectedAnswerFile: z
+    .instanceof(File)
+    .optional()
+    .refine((file) => !file || file.size <= MAX_FILE_SIZE, `Max file size is 5MB.`)
+    .refine(
+      (file) => !file || ACCEPTED_FILE_TYPES_RESPONSE_OR_EXPECTED.includes(file.type),
+      "Only .pdf, .docx, and .txt files are accepted for the expected answer."
     ),
 });
 
 export type GradingFormValues = z.infer<typeof gradingFormSchema>;
+

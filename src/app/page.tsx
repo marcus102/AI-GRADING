@@ -41,11 +41,17 @@ export default function Home() {
     try {
       const questionFileContentDataUri = await fileToDataUrl(data.questionFile);
       const studentResponseFileContentDataUri = await fileToDataUrl(data.studentResponseFile);
+      
+      let expectedAnswerFileContentDataUri: string | undefined = undefined;
+      if (data.expectedAnswerFile) {
+        expectedAnswerFileContentDataUri = await fileToDataUrl(data.expectedAnswerFile);
+      }
 
       const result = await handleGradeSubmission({
         questionFileContentDataUri,
         studentResponseFileContentDataUri,
         rubric: data.rubric,
+        expectedAnswerFileContentDataUri,
       });
 
       setIsLoading(false);
@@ -111,7 +117,7 @@ export default function Home() {
                  <Terminal className="h-5 w-5" />
                  <AlertTitle>Ready to Grade!</AlertTitle>
                  <AlertDescription>
-                   Upload the question file, rubric, and student's response file on the left for AI-powered grading. Results will appear here.
+                   Upload the question file, rubric, and student's response file on the left for AI-powered grading. You can also optionally provide an expected answer file. Results will appear here.
                  </AlertDescription>
                </Alert>
             )}
