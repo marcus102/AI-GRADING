@@ -11,7 +11,7 @@ import { handleGradeSubmission } from '@/app/actions';
 import type { GradeStudentResponseOutput } from '@/ai/flows/grade-student-response';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Terminal } from 'lucide-react';
+import { Terminal, Info } from 'lucide-react';
 import { Spinner } from '@/components/ui/spinner';
 import type { StoredGradedTest } from '@/lib/types';
 
@@ -160,6 +160,20 @@ export default function Home() {
     <div className="min-h-screen flex flex-col bg-background">
       <Header />
       <main className="flex-grow container mx-auto px-4 py-8">
+        <div className="mb-8 p-6 bg-card rounded-lg shadow-md border border-border">
+          <h2 className="text-2xl font-semibold text-foreground mb-3 flex items-center">
+            <Info className="mr-3 h-6 w-6 text-primary" />
+            About This System
+          </h2>
+          <p className="text-muted-foreground text-base">
+            This Hybrid Human-AI Grading System leverages artificial intelligence to assist lecturers in grading student test responses. 
+            Lecturers can upload question files (PDF/DOCX), corresponding student responses (PDF/DOCX/TXT), 
+            a grading rubric, and set a maximum score for the question. Optionally, an expected answer file can be provided for more accurate AI assessment.
+            The system then provides an AI-generated score, feedback, and justification, which the lecturer can review, override, and add comments to before finalizing.
+            This is a project-driven initiative aimed at streamlining the grading process while maintaining instructor oversight.
+          </p>
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
           <div>
             <GradingForm onSubmit={handleFormSubmit} isLoading={isLoading} />
