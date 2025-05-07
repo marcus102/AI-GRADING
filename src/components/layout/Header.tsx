@@ -6,7 +6,7 @@ export function Header() {
       <div className="container mx-auto px-4 py-4 flex items-center">
         <GraduationCap className="h-8 w-8 text-primary mr-3" />
         <h1 className="text-3xl font-bold text-foreground">
-          Grade<span className="text-primary">Wise</span>
+        Hybrid Human-AI Grading System
         </h1>
       </div>
     </header>

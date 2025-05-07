@@ -24,7 +24,7 @@ const fileToDataUrl = (file: File): Promise<string> => {
 
 export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
-  const [isFinalizing, setIsFinalizing] = useState(false);
+  const [isFinalizing, setIsFinalizing] = useState(false); // Used for external finalization if any
   const [aiGradingResult, setAiGradingResult] = useState<GradeStudentResponseOutput | null>(null);
   const [currentYear, setCurrentYear] = useState<number | null>(null);
   const { toast } = useToast();
@@ -36,7 +36,7 @@ export default function Home() {
 
   const handleFormSubmit = async (data: GradingFormValues) => {
     setIsLoading(true);
-    setAiGradingResult(null); // Clear previous results
+    setAiGradingResult(null); 
 
     try {
       const questionFileContentDataUri = await fileToDataUrl(data.questionFile);
@@ -81,17 +81,20 @@ export default function Home() {
     }
   };
 
-  const handleFinalizeGrade = (finalGrade: { score: number; feedback: string; justification: string; instructorComments?: string }) => {
-    setIsFinalizing(true);
-    console.log("Final Grade Data (for export):", finalGrade);
-    // In a real app, this would trigger an export or save to a database.
-    setTimeout(() => { // Simulate API call
-      toast({
-        title: "Grade Finalized",
-        description: "The grade and feedback have been logged (simulated export).",
-      });
-      setIsFinalizing(false);
-    }, 1000);
+  // This function is now primarily for any actions needed *after* PDF export logic in GradingResult.
+  // For example, saving to a database or other logging.
+  const handleFinalGradeData = (finalGrade: { score: number; feedback: string; justification: string; instructorComments?: string }) => {
+    // setIsFinalizing(true); // This state is now mainly for the button in GradingResult
+    console.log("Final Grade Data (for logging/database):", finalGrade);
+    // Example: Simulate an API call to save the data
+    // setTimeout(() => { 
+    //   toast({
+    //     title: "Grade Logged",
+    //     description: "The final grade has been logged (simulated).",
+    //   });
+    //   setIsFinalizing(false);
+    // }, 500);
+    // Note: PDF export toast is handled within GradingResult
   };
 
   return (
@@ -110,7 +113,11 @@ export default function Home() {
               </div>
             )}
             {!isLoading && aiGradingResult && (
-              <GradingResult aiResult={aiGradingResult} onFinalize={handleFinalizeGrade} isFinalizing={isFinalizing}/>
+              <GradingResult 
+                aiResult={aiGradingResult} 
+                onFinalize={handleFinalGradeData} 
+                isFinalizing={isFinalizing} // Pass this for potential external busy states
+              />
             )}
             {!isLoading && !aiGradingResult && (
                <Alert className="bg-card shadow-md">
@@ -130,3 +137,4 @@ export default function Home() {
     </div>
   );
 }
+
