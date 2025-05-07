@@ -5,7 +5,8 @@ import { useState, useEffect } from 'react';
 import { Header } from '@/components/layout/Header';
 import { GradingForm } from '@/components/grading/GradingForm';
 import { GradingResult } from '@/components/grading/GradingResult';
-import { GradingFormValues } from '@/lib/schemas';
+import type { GradingFormValues, ValidatedGradingFormValues } from '@/lib/schemas';
+import { gradingFormSchema } from '@/lib/schemas'; // Import the schema for validation
 import { handleGradeSubmission } from '@/app/actions';
 import type { GradeStudentResponseOutput } from '@/ai/flows/grade-student-response';
 import { useToast } from '@/hooks/use-toast';
@@ -27,7 +28,7 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const [isFinalizing, setIsFinalizing] = useState(false); 
   const [aiGradingResult, setAiGradingResult] = useState<GradeStudentResponseOutput | null>(null);
-  const [currentFormValues, setCurrentFormValues] = useState<GradingFormValues | null>(null);
+  const [currentFormValues, setCurrentFormValues] = useState<ValidatedGradingFormValues | null>(null);
   const [currentYear, setCurrentYear] = useState<number | null>(null);
   const { toast } = useToast();
 
@@ -39,22 +40,38 @@ export default function Home() {
   const handleFormSubmit = async (data: GradingFormValues) => {
     setIsLoading(true);
     setAiGradingResult(null); 
-    setCurrentFormValues(data); // Store form values to use when saving
+
+    // Validate with Zod before processing, ensuring maxScore is a number
+    const validationResult = gradingFormSchema.safeParse(data);
+    if (!validationResult.success) {
+      setIsLoading(false);
+      // Attempt to show specific Zod error, or a generic one
+      const firstError = validationResult.error.errors[0];
+      toast({
+        title: "Invalid Input",
+        description: firstError ? `${firstError.path.join('.')} - ${firstError.message}` : "Please check your form inputs.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    const validatedData = validationResult.data as ValidatedGradingFormValues; // Now maxScore is guaranteed to be a number
+    setCurrentFormValues(validatedData); // Store validated form values
 
     try {
-      const questionFileContentDataUri = await fileToDataUrl(data.questionFile);
-      const studentResponseFileContentDataUri = await fileToDataUrl(data.studentResponseFile);
+      const questionFileContentDataUri = await fileToDataUrl(validatedData.questionFile);
+      const studentResponseFileContentDataUri = await fileToDataUrl(validatedData.studentResponseFile);
       
       let expectedAnswerFileContentDataUri: string | undefined = undefined;
-      if (data.expectedAnswerFile) {
-        expectedAnswerFileContentDataUri = await fileToDataUrl(data.expectedAnswerFile);
+      if (validatedData.expectedAnswerFile) {
+        expectedAnswerFileContentDataUri = await fileToDataUrl(validatedData.expectedAnswerFile);
       }
 
       const result = await handleGradeSubmission({
         questionFileContentDataUri,
         studentResponseFileContentDataUri,
-        rubric: data.rubric,
-        maxScore: data.maxScore,
+        rubric: validatedData.rubric,
+        maxScore: validatedData.maxScore, // Use validated maxScore
         expectedAnswerFileContentDataUri,
       });
 

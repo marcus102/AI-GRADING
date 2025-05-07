@@ -41,10 +41,19 @@ export const gradingFormSchema = z.object({
       required_error: "Max score is required.",
       invalid_type_error: "Max score must be a number.",
     })
-    .min(1, { message: "Max score must be at least 1." })
-    .max(100, { message: "Max score can be at most 100." })
+    .nullable() // Allow null for initial empty input
+    .refine(val => val !== null, { message: "Max score is required."}) // Ensure it's not null on submit
+    .refine(val => val !== null && val >= 1, { message: "Max score must be at least 1." })
+    .refine(val => val !== null && val <= 100, { message: "Max score can be at most 100." })
     .default(10),
 });
 
 export type GradingFormValues = z.infer<typeof gradingFormSchema>;
+
+// Create a new type for validated data before sending to backend, ensuring maxScore is a number
+export const validatedGradingFormSchema = gradingFormSchema.extend({
+    maxScore: z.number().min(1).max(100)
+});
+export type ValidatedGradingFormValues = z.infer<typeof validatedGradingFormSchema>;
+
 

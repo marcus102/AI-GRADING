@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { FileCheck, UploadCloud, Paperclip, FileText, AlertCircle } from 'lucide-react';
+import { FileCheck, UploadCloud, Paperclip, FileText, AlertCircle, BookOpenCheck } from 'lucide-react';
 import { Spinner } from '@/components/ui/spinner';
 import { useState } from 'react';
 
@@ -17,6 +17,35 @@ interface GradingFormProps {
   onSubmit: (data: GradingFormValues) => Promise<void>;
   isLoading: boolean;
 }
+
+const DEFAULT_RUBRIC = `General Grading Rubric:
+
+1.  **Accuracy and Correctness (40%)**:
+    *   Are the facts, figures, and concepts presented accurate?
+    *   Is the information up-to-date and relevant to the question?
+    *   Are there any misinterpretations or errors in the response?
+
+2.  **Completeness and Thoroughness (30%)**:
+    *   Does the response address all parts of the question?
+    *   Is the answer comprehensive and detailed?
+    *   Are key concepts and ideas fully explored?
+
+3.  **Clarity and Organization (20%)**:
+    *   Is the response well-organized and easy to follow?
+    *   Is the language clear, concise, and precise?
+    *   Are there any grammatical errors or typos?
+
+4.  **Critical Thinking and Analysis (10%)**:
+    *   Does the response demonstrate critical thinking and analytical skills?
+    *   Are arguments well-supported with evidence or examples?
+    *   Does the student provide any original insights or perspectives?
+
+Specific points to consider for this question:
+- [Add specific criteria related to the question here]
+- [Another specific criterion]
+
+Score will be calculated based on the weighted average of the above criteria.
+`;
 
 export function GradingForm({ onSubmit, isLoading }: GradingFormProps) {
   const [questionFileName, setQuestionFileName] = useState<string | null>(null);
@@ -26,7 +55,7 @@ export function GradingForm({ onSubmit, isLoading }: GradingFormProps) {
   const form = useForm<GradingFormValues>({
     resolver: zodResolver(gradingFormSchema),
     defaultValues: {
-      rubric: '',
+      rubric: DEFAULT_RUBRIC,
       questionFile: undefined,
       studentResponseFile: undefined,
       expectedAnswerFile: undefined,
@@ -94,9 +123,12 @@ export function GradingForm({ onSubmit, isLoading }: GradingFormProps) {
               name="rubric"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-lg">Grading Rubric</FormLabel>
+                  <FormLabel className="text-lg flex items-center">
+                     <BookOpenCheck className="mr-2 h-5 w-5 text-primary" />
+                    Grading Rubric
+                  </FormLabel>
                   <FormControl>
-                    <Textarea placeholder="Describe the grading criteria and rubric (max 5000 characters)" {...field} rows={5} />
+                    <Textarea placeholder="Describe the grading criteria and rubric (max 5000 characters)" {...field} rows={8} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -114,7 +146,10 @@ export function GradingForm({ onSubmit, isLoading }: GradingFormProps) {
                       type="number" 
                       placeholder="e.g., 10, 20, 100" 
                       {...field} 
-                      onChange={e => field.onChange(parseInt(e.target.value, 10))}
+                      onChange={e => {
+                        const value = e.target.value;
+                        field.onChange(value === '' ? null : parseInt(value, 10));
+                      }}
                       min="1"
                       max="100"
                     />
