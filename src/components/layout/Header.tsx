@@ -1,7 +1,6 @@
 
 import Link from 'next/link';
-import { GraduationCap, History } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { GraduationCap } from 'lucide-react';
 import { ThemeToggleButton } from '@/components/theme-toggle-button';
 
 export function Header() {
@@ -17,17 +16,10 @@ export function Header() {
           </Link>
         </div>
         <nav className="flex items-center gap-4">
-          <Link href="/graded-tests" passHref legacyBehavior>
-            <Button variant="outline" asChild>
-              <a>
-                <History className="mr-2 h-5 w-5" />
-                Graded Tests
-              </a>
-            </Button>
-          </Link>
           <ThemeToggleButton />
         </nav>
       </div>
     </header>
   );
 }
+

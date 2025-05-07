@@ -218,7 +218,7 @@ export default function Home() {
         </div>
         
         <div className="mt-12">
-          <RecentGradedTests tests={gradedList} />
+          <RecentGradedTests tests={gradedList} maxToShow={5} />
         </div>
 
       </main>
