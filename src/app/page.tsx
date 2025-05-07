@@ -24,7 +24,7 @@ const fileToDataUrl = (file: File): Promise<string> => {
 
 export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
-  const [isFinalizing, setIsFinalizing] = useState(false); // Used for external finalization if any
+  const [isFinalizing, setIsFinalizing] = useState(false); 
   const [aiGradingResult, setAiGradingResult] = useState<GradeStudentResponseOutput | null>(null);
   const [currentYear, setCurrentYear] = useState<number | null>(null);
   const { toast } = useToast();
@@ -81,20 +81,21 @@ export default function Home() {
     }
   };
 
-  // This function is now primarily for any actions needed *after* PDF export logic in GradingResult.
-  // For example, saving to a database or other logging.
   const handleFinalGradeData = (finalGrade: { score: number; feedback: string; justification: string; instructorComments?: string }) => {
-    // setIsFinalizing(true); // This state is now mainly for the button in GradingResult
     console.log("Final Grade Data (for logging/database):", finalGrade);
-    // Example: Simulate an API call to save the data
-    // setTimeout(() => { 
-    //   toast({
-    //     title: "Grade Logged",
-    //     description: "The final grade has been logged (simulated).",
-    //   });
-    //   setIsFinalizing(false);
-    // }, 500);
-    // Note: PDF export toast is handled within GradingResult
+    // PDF export toast is handled within GradingResult
+  };
+
+  const handleStartOver = () => {
+    setAiGradingResult(null);
+    setIsLoading(false); 
+    // Form fields in GradingForm will persist, user can change them or re-upload.
+    // This primarily clears the results display.
+    toast({
+      title: "Ready for New Submission",
+      description: "The previous grading result has been cleared.",
+      variant: "default",
+    });
   };
 
   return (
@@ -116,7 +117,8 @@ export default function Home() {
               <GradingResult 
                 aiResult={aiGradingResult} 
                 onFinalize={handleFinalGradeData} 
-                isFinalizing={isFinalizing} // Pass this for potential external busy states
+                isFinalizing={isFinalizing}
+                onStartOver={handleStartOver}
               />
             )}
             {!isLoading && !aiGradingResult && (
@@ -137,4 +139,3 @@ export default function Home() {
     </div>
   );
 }
-
