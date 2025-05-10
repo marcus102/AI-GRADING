@@ -49,18 +49,24 @@ export default function Home() {
     setCurrentYear(new Date().getFullYear());
     if (user) { // Only load from localStorage if user is logged in
       try {
-        const storedData = localStorage.getItem(`gradedBrokerTests_${user.uid}`);
+        const storageKey = `gradedBrokerTests_${user.uid}`;
+        const storedData = localStorage.getItem(storageKey);
         if (storedData) {
           setGradedList(JSON.parse(storedData));
+        } else {
+          setGradedList([]); // Initialize with empty array if no data for user
         }
       } catch (error) {
         console.error("Failed to load graded tests from localStorage", error);
         toast({
           title: "Loading Error",
-          description: "Could not load initial graded tests from local storage.",
+          description: "Could not load graded tests from local storage.",
           variant: "destructive",
         });
+        setGradedList([]); // Default to empty list on error
       }
+    } else {
+      setGradedList([]); // Clear list if user logs out
     }
   }, [toast, user]);
 
@@ -137,9 +143,10 @@ export default function Home() {
       });
       return;
     }
+    setIsFinalizing(true);
 
     const newGradedTest: StoredGradedTest = {
-      id: new Date().toISOString() + Math.random().toString(36).substring(2, 15),
+      id: new Date().toISOString() + Math.random().toString(36).substring(2, 15), // Simple unique ID
       questionFileName: currentFormValues.questionFile.name,
       studentResponseFileName: currentFormValues.studentResponseFile.name,
       rubricSummary: currentFormValues.rubric.substring(0, 50) + (currentFormValues.rubric.length > 50 ? '...' : ''),
@@ -156,10 +163,14 @@ export default function Home() {
       const storageKey = `gradedBrokerTests_${user.uid}`;
       const existingTestsJSON = localStorage.getItem(storageKey);
       const existingTests: StoredGradedTest[] = existingTestsJSON ? JSON.parse(existingTestsJSON) : [];
-      const updatedTests = [...existingTests, newGradedTest];
+      const updatedTests = [newGradedTest, ...existingTests]; // Add new test to the beginning
       localStorage.setItem(storageKey, JSON.stringify(updatedTests));
       setGradedList(updatedTests);
-      console.log("Final Grade Data Saved to localStorage:", newGradedTest);
+      toast({
+        title: "Grade Saved",
+        description: "The finalized grade has been saved locally.",
+        variant: "default",
+      });
     } catch (e) {
       console.error("Failed to save to localStorage", e);
       toast({
@@ -167,6 +178,8 @@ export default function Home() {
         description: "Could not save the graded test to local storage. It might be full or disabled.",
         variant: "destructive",
       });
+    } finally {
+        setIsFinalizing(false);
     }
   };
 
@@ -174,6 +187,7 @@ export default function Home() {
     setAiGradingResult(null);
     setCurrentFormValues(null);
     setIsLoading(false); 
+    setIsFinalizing(false);
     toast({
       title: "Ready for New Submission",
       description: "The previous grading result has been cleared.",
@@ -194,7 +208,8 @@ export default function Home() {
     // This case should ideally be handled by the redirect, but as a fallback:
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-background">
-        <p className="text-lg text-muted-foreground">Redirecting to sign-in...</p>
+        <Spinner size="lg" />
+        <p className="mt-4 text-lg text-muted-foreground">Redirecting to sign-in...</p>
       </div>
     );
   }
@@ -213,13 +228,13 @@ export default function Home() {
             Lecturers can upload question files (PDF/DOCX), corresponding student responses (PDF/DOCX/TXT), 
             a grading rubric, and set a maximum score for the question. Optionally, an expected answer file can be provided for more accurate AI assessment.
             The system then provides an AI-generated score, feedback, and justification, which the lecturer can review, override, and add comments to before finalizing.
-            This is a project-driven initiative aimed at streamlining the grading process while maintaining instructor oversight.
+            This is a project-driven initiative aimed at streamlining the grading process while maintaining instructor oversight. Graded tests are stored in your browser's local storage.
           </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
           <div>
-            <GradingForm onSubmit={handleFormSubmit} isLoading={isLoading} />
+            <GradingForm onSubmit={handleFormSubmit} isLoading={isLoading || isFinalizing} />
           </div>
           <div>
             {isLoading && (
@@ -250,7 +265,7 @@ export default function Home() {
         </div>
         
         <div className="mt-12">
-          <RecentGradedTests tests={gradedList} maxToShow={5} />
+          <RecentGradedTests tests={gradedList} />
         </div>
 
       </main>
@@ -260,3 +275,4 @@ export default function Home() {
     </div>
   );
 }
+
