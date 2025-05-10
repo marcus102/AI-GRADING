@@ -2,11 +2,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/contexts/AuthContext';
 import { Header } from '@/components/layout/Header';
 import { GradingForm } from '@/components/grading/GradingForm';
 import { GradingResult } from '@/components/grading/GradingResult';
 import type { GradingFormValues, ValidatedGradingFormValues } from '@/lib/schemas';
-import { gradingFormSchema } from '@/lib/schemas'; // Import the schema for validation
+import { gradingFormSchema } from '@/lib/schemas';
 import { handleGradeSubmission } from '@/app/actions';
 import type { GradeStudentResponseOutput } from '@/ai/flows/grade-student-response';
 import { useToast } from '@/hooks/use-toast';
@@ -26,6 +28,9 @@ const fileToDataUrl = (file: File): Promise<string> => {
 };
 
 export default function Home() {
+  const { user, loading: authLoading } = useAuth();
+  const router = useRouter();
+
   const [isLoading, setIsLoading] = useState(false);
   const [isFinalizing, setIsFinalizing] = useState(false); 
   const [aiGradingResult, setAiGradingResult] = useState<GradeStudentResponseOutput | null>(null);
@@ -35,21 +40,29 @@ export default function Home() {
   const { toast } = useToast();
 
   useEffect(() => {
-    setCurrentYear(new Date().getFullYear());
-    try {
-      const storedData = localStorage.getItem('gradedBrokerTests');
-      if (storedData) {
-        setGradedList(JSON.parse(storedData));
-      }
-    } catch (error) {
-      console.error("Failed to load graded tests from localStorage", error);
-      toast({
-        title: "Loading Error",
-        description: "Could not load initial graded tests from local storage.",
-        variant: "destructive",
-      });
+    if (!authLoading && !user) {
+      router.push('/auth/signin');
     }
-  }, [toast]);
+  }, [user, authLoading, router]);
+
+  useEffect(() => {
+    setCurrentYear(new Date().getFullYear());
+    if (user) { // Only load from localStorage if user is logged in
+      try {
+        const storedData = localStorage.getItem(`gradedBrokerTests_${user.uid}`);
+        if (storedData) {
+          setGradedList(JSON.parse(storedData));
+        }
+      } catch (error) {
+        console.error("Failed to load graded tests from localStorage", error);
+        toast({
+          title: "Loading Error",
+          description: "Could not load initial graded tests from local storage.",
+          variant: "destructive",
+        });
+      }
+    }
+  }, [toast, user]);
 
 
   const handleFormSubmit = async (data: GradingFormValues) => {
@@ -116,10 +129,10 @@ export default function Home() {
   };
 
   const handleFinalGradeData = (finalGrade: { score: number; feedback: string; justification: string; instructorComments?: string }) => {
-    if (!aiGradingResult || !currentFormValues) {
+    if (!aiGradingResult || !currentFormValues || !user) {
       toast({
         title: "Error Saving Grade",
-        description: "Could not save the grade. Missing AI result or form data.",
+        description: "Could not save the grade. Missing AI result, form data, or user session.",
         variant: "destructive",
       });
       return;
@@ -140,11 +153,12 @@ export default function Home() {
     };
 
     try {
-      const existingTestsJSON = localStorage.getItem('gradedBrokerTests');
+      const storageKey = `gradedBrokerTests_${user.uid}`;
+      const existingTestsJSON = localStorage.getItem(storageKey);
       const existingTests: StoredGradedTest[] = existingTestsJSON ? JSON.parse(existingTestsJSON) : [];
       const updatedTests = [...existingTests, newGradedTest];
-      localStorage.setItem('gradedBrokerTests', JSON.stringify(updatedTests));
-      setGradedList(updatedTests); // Update state to re-render RecentGradedTests
+      localStorage.setItem(storageKey, JSON.stringify(updatedTests));
+      setGradedList(updatedTests);
       console.log("Final Grade Data Saved to localStorage:", newGradedTest);
     } catch (e) {
       console.error("Failed to save to localStorage", e);
@@ -166,6 +180,24 @@ export default function Home() {
       variant: "default",
     });
   };
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-background">
+        <Spinner size="lg" />
+        <p className="mt-4 text-lg text-muted-foreground">Loading session...</p>
+      </div>
+    );
+  }
+
+  if (!user) {
+    // This case should ideally be handled by the redirect, but as a fallback:
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-background">
+        <p className="text-lg text-muted-foreground">Redirecting to sign-in...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -228,4 +260,3 @@ export default function Home() {
     </div>
   );
 }
-
