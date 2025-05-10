@@ -1,45 +1,24 @@
 
-import {
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-  signOut as firebaseSignOut,
-  onAuthStateChanged as firebaseOnAuthStateChanged,
-  type User,
-  type AuthError,
-} from 'firebase/auth';
-import { auth } from './config';
-import type { AuthFormValues } from '@/lib/schemas';
+// Firebase authentication functions are no longer used as auth is handled by localStorage.
+// This file is kept to prevent breaking existing imports in other files,
+// but its contents are now minimal.
 
-export const signUpWithEmail = async (values: AuthFormValues): Promise<User | AuthError> => {
-  try {
-    const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
-    return userCredential.user;
-  } catch (error) {
-    return error as AuthError;
-  }
-};
+// Simplified AuthError-like structure, primarily for type compatibility if any code still expects it.
+export interface AuthError {
+  code: string;
+  message: string;
+}
 
-export const signInWithEmail = async (values: AuthFormValues): Promise<User | AuthError> => {
-  try {
-    const userCredential = await signInWithEmailAndPassword(auth, values.email, values.password);
-    return userCredential.user;
-  } catch (error) {
-    return error as AuthError;
-  }
-};
-
-export const signOut = async (): Promise<void | AuthError> => {
-  try {
-    await firebaseSignOut(auth);
-  } catch (error) {
-    return error as AuthError;
-  }
-};
-
-export const onAuthStateChanged = (callback: (user: User | null) => void) => {
-  return firebaseOnAuthStateChanged(auth, callback);
-};
-
+/**
+ * Checks if an error object conforms to the simplified AuthError structure.
+ * In the localStorage-based auth system, this function might not be as relevant
+ * as error handling is more direct.
+ * @param error The error object to check.
+ * @returns True if the error object matches the AuthError structure, false otherwise.
+ */
 export const isAuthError = (error: any): error is AuthError => {
   return error && typeof error.code === 'string' && typeof error.message === 'string';
 };
+
+// Other Firebase auth functions (signUpWithEmail, signInWithEmail, signOut, onAuthStateChanged)
+// have been removed as they are replaced by localStorage logic in AuthContext.tsx.

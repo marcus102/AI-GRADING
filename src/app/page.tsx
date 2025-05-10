@@ -47,9 +47,9 @@ export default function Home() {
 
   useEffect(() => {
     setCurrentYear(new Date().getFullYear());
-    if (user) { // Only load from localStorage if user is logged in
+    if (user && user.email) { // Only load from localStorage if user is logged in and has an email
       try {
-        const storageKey = `gradedBrokerTests_${user.uid}`;
+        const storageKey = `gradedBrokerTests_${user.email}`; // Use user.email for unique key
         const storedData = localStorage.getItem(storageKey);
         if (storedData) {
           setGradedList(JSON.parse(storedData));
@@ -66,7 +66,7 @@ export default function Home() {
         setGradedList([]); // Default to empty list on error
       }
     } else {
-      setGradedList([]); // Clear list if user logs out
+      setGradedList([]); // Clear list if user logs out or has no email
     }
   }, [toast, user]);
 
@@ -135,10 +135,10 @@ export default function Home() {
   };
 
   const handleFinalGradeData = (finalGrade: { score: number; feedback: string; justification: string; instructorComments?: string }) => {
-    if (!aiGradingResult || !currentFormValues || !user) {
+    if (!aiGradingResult || !currentFormValues || !user || !user.email) {
       toast({
         title: "Error Saving Grade",
-        description: "Could not save the grade. Missing AI result, form data, or user session.",
+        description: "Could not save the grade. Missing AI result, form data, or user session details.",
         variant: "destructive",
       });
       return;
@@ -160,7 +160,7 @@ export default function Home() {
     };
 
     try {
-      const storageKey = `gradedBrokerTests_${user.uid}`;
+      const storageKey = `gradedBrokerTests_${user.email}`; // Use user.email for unique key
       const existingTestsJSON = localStorage.getItem(storageKey);
       const existingTests: StoredGradedTest[] = existingTestsJSON ? JSON.parse(existingTestsJSON) : [];
       const updatedTests = [newGradedTest, ...existingTests]; // Add new test to the beginning
@@ -275,4 +275,3 @@ export default function Home() {
     </div>
   );
 }
-

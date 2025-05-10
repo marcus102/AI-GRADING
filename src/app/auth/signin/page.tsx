@@ -9,7 +9,7 @@ import { useEffect } from 'react';
 import { Spinner } from '@/components/ui/spinner';
 
 export default function SignInPage() {
-  const { signIn, user, loading, isAuthError } = useAuth();
+  const { signIn, user, loading } = useAuth(); // Removed isAuthError as it's handled differently
   const router = useRouter();
 
   useEffect(() => {
@@ -19,11 +19,11 @@ export default function SignInPage() {
   }, [user, loading, router]);
 
   const handleSignIn = async (values: AuthFormValues) => {
-    const result = await signIn(values);
-    if (!isAuthError(result)) {
+    const success = await signIn(values);
+    if (success) {
        router.push('/');
     }
-    // Error handling is done within AuthContext/AuthForm and via toast
+    // Error toasts are now handled within the AuthContext's signIn method
   };
 
   if (loading) {

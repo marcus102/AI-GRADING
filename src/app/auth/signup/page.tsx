@@ -10,7 +10,7 @@ import { Spinner } from '@/components/ui/spinner';
 
 
 export default function SignUpPage() {
-  const { signUp, user, loading, isAuthError } = useAuth();
+  const { signUp, user, loading } = useAuth(); // Removed isAuthError
   const router = useRouter();
 
  useEffect(() => {
@@ -20,12 +20,12 @@ export default function SignUpPage() {
   }, [user, loading, router]);
 
   const handleSignUp = async (values: AuthFormValues) => {
-    const result = await signUp(values);
-    if (!isAuthError(result)) {
+    const success = await signUp(values);
+    if (success) {
       // Successfully signed up, redirect to sign-in or directly to app
       router.push('/auth/signin'); 
     }
-    // Error handling is done within AuthContext/AuthForm and via toast
+    // Error toasts are now handled within the AuthContext's signUp method
   };
   
   if (loading) {
