@@ -17,7 +17,7 @@ const robotoMono = Roboto_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'GradeWise',
+  title: 'Human-AI grading system',
   description: 'AI-Powered Online Test Grading System',
 };
 

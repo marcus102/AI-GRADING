@@ -1,6 +1,5 @@
-
-import {genkit} from 'genkit';
-import {googleAI} from '@genkit-ai/googleai';
+import { genkit } from "genkit";
+import { googleAI } from "@genkit-ai/googleai";
 // To use other model providers, such as local LLMs (e.g., via Ollama),
 // you would typically:
 // 1. Install the provider's Genkit plugin (e.g., `npm install @genkit-ai/ollama`).
@@ -22,7 +21,8 @@ const plugins = [
 // Ensure the model name is prefixed with its provider if multiple providers are used
 // (e.g., 'googleai/gemini-2.0-flash' or 'ollama/llama3').
 // If GENKIT_MODEL_NAME is not set, it defaults to 'googleai/gemini-2.0-flash'.
-const defaultModelName = process.env.GENKIT_MODEL_NAME || 'googleai/gemini-2.0-flash';
+const defaultModelName =
+  process.env.GENKIT_MODEL_NAME || "googleai/gemini-2.0-flash";
 
 export const ai = genkit({
   plugins: plugins,
